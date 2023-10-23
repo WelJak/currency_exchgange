@@ -1,6 +1,7 @@
 package com.weljak.currencyexchange.domain;
 
-import org.junit.jupiter.api.BeforeEach;
+import com.weljak.currencyexchange.domain.model.BankAccount;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -8,6 +9,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,8 +21,8 @@ public class BankAccountRepositoryTest {
     @Autowired
     private BankAccountRepository bankAccountRepository;
 
-    @BeforeEach
-    void setup() {
+    @AfterEach
+    void teardown() {
         bankAccountRepository.deleteAll();
     }
 
@@ -41,7 +43,7 @@ public class BankAccountRepositoryTest {
         Optional<BankAccount> bankAccountOptional = bankAccountRepository.findById(testUUID);
         assertTrue(bankAccountOptional.isPresent());
         BankAccount entity = bankAccountOptional.get();
-        assertEquals(testUUID, entity.getId());
+        assertEquals(testUUID, entity.getUuid());
         assertEquals(testName, entity.getName());
         assertEquals(testSurname, entity.getSurname());
         assertEquals(initialBalancePLN, entity.getBalancePLN());
@@ -69,7 +71,7 @@ public class BankAccountRepositoryTest {
         Optional<BankAccount> bankAccountOptional = bankAccountRepository.findById(testUUID);
         assertTrue(bankAccountOptional.isPresent());
         BankAccount entity = bankAccountOptional.get();
-        assertEquals(testUUID, entity.getId());
+        assertEquals(testUUID, entity.getUuid());
         assertEquals(testName, entity.getName());
         assertEquals(testSurname, entity.getSurname());
         assertEquals(updatedPLNBalance, entity.getBalancePLN());

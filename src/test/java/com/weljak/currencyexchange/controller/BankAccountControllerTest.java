@@ -1,7 +1,15 @@
 package com.weljak.currencyexchange.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.weljak.currencyexchange.domain.model.BalanceDetails;
+import com.weljak.currencyexchange.domain.model.ExchangeDetails;
+import com.weljak.currencyexchange.domain.model.ExchangeType;
+import com.weljak.currencyexchange.service.BankAccountService;
 import com.weljak.currencyexchange.util.Endpoints;
+import com.weljak.currencyexchange.webapi.BankAccountController;
+import com.weljak.currencyexchange.webapi.request.CreateBankAccountRequest;
+import com.weljak.currencyexchange.webapi.request.ExchangeCurrencyRequest;
+import com.weljak.currencyexchange.webapi.response.CreateBankAccountResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -15,6 +23,7 @@ import java.math.RoundingMode;
 import java.util.UUID;
 
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -30,59 +39,56 @@ public class BankAccountControllerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
-    void shouldReturnStatusOkWhenCreateUserInputIsValid() {
+    void shouldReturnStatusOkWhenCreateUserInputIsValid() throws Exception {
         //given
         String testName = "John";
         String testSurname = "Doe";
         BigDecimal initialBalancePLN = BigDecimal.ZERO;
-        CreateBankAccountRequest request = new BankAccountRequest(testName, testSurname, initialBalancePLN);
+        CreateBankAccountRequest request = new CreateBankAccountRequest(testName, testSurname, initialBalancePLN);
 
         //when
         String testUUID = UUID.randomUUID().toString();
-        BigDecimal initialBalanceUSD = BigDecimal.ZERO;
-        when(bankAccountService.createAccount(testName, testSurname, initialBalancePLN)).thenReturn(new CreateAccountResponse(testUUID, initialBalancePLN, initialBalanceUSD));
+        when(bankAccountService.createBankAccount(request)).thenReturn(new CreateBankAccountResponse(testUUID, initialBalancePLN));
 
         //then
-        mockMvc.perform(post(Endpoints.BANK_ACCOUNT_CREATE_ACCOUNT_ENDPOINT, testUUID).content(objectMapper.writeValueAsString(request)).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated());
+        mockMvc.perform(post(Endpoints.BANK_ACCOUNT_CREATE_ACCOUNT_ENDPOINT).content(objectMapper.writeValueAsString(request)).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated());
     }
 
     @Test
-    void shouldReturnStatusBadRequestWhenCreateUserInputHasEmptyName() {
+    void shouldReturnStatusBadRequestWhenCreateUserInputHasEmptyName() throws Exception {
         //given
         String testName = "";
         String testSurname = "Doe";
         BigDecimal initialBalancePLN = BigDecimal.ZERO;
-        CreateBankAccountRequest request = new BankAccountRequest(testName, testSurname, initialBalancePLN);
-
+        CreateBankAccountRequest request = new CreateBankAccountRequest(testName, testSurname, initialBalancePLN);
 
         //then
-        mockMvc.perform(post(Endpoints.BANK_ACCOUNT_CREATE_ACCOUNT_ENDPOINT, testUUID).content(objectMapper.writeValueAsString(request)).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
+        mockMvc.perform(post(Endpoints.BANK_ACCOUNT_CREATE_ACCOUNT_ENDPOINT).content(objectMapper.writeValueAsString(request)).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
     }
 
     @Test
-    void shouldReturnStatusBadRequestWhenCreateUserInputHasEmptySurname() {
+    void shouldReturnStatusBadRequestWhenCreateUserInputHasEmptySurname() throws Exception {
         //given
         String testName = "John";
         String testSurname = "";
         BigDecimal initialBalancePLN = BigDecimal.ZERO;
-        CreateBankAccountRequest request = new BankAccountRequest(testName, testSurname, initialBalancePLN);
-
+        CreateBankAccountRequest request = new CreateBankAccountRequest(testName, testSurname, initialBalancePLN);
 
         //then
-        mockMvc.perform(post(Endpoints.BANK_ACCOUNT_CREATE_ACCOUNT_ENDPOINT, testUUID).content(objectMapper.writeValueAsString(request)).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
+        mockMvc.perform(post(Endpoints.BANK_ACCOUNT_CREATE_ACCOUNT_ENDPOINT).content(objectMapper.writeValueAsString(request)).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
     }
 
     @Test
-    void shouldReturnStatusBadRequestWhenCreateUserInputHasNegativeInitialValue() {
+    void shouldReturnStatusBadRequestWhenCreateUserInputHasNegativeInitialValue() throws Exception {
         //given
         String testName = "John";
         String testSurname = "Doe";
         BigDecimal initialBalancePLN = BigDecimal.valueOf(-123.00).setScale(2, RoundingMode.CEILING);
-        CreateBankAccountRequest request = new BankAccountRequest(testName, testSurname, initialBalancePLN);
+        CreateBankAccountRequest request = new CreateBankAccountRequest(testName, testSurname, initialBalancePLN);
 
 
         //then
-        mockMvc.perform(post(Endpoints.BANK_ACCOUNT_CREATE_ACCOUNT_ENDPOINT, testUUID).content(objectMapper.writeValueAsString(request)).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
+        mockMvc.perform(post(Endpoints.BANK_ACCOUNT_CREATE_ACCOUNT_ENDPOINT).content(objectMapper.writeValueAsString(request)).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
     }
 
     @Test
@@ -95,58 +101,56 @@ public class BankAccountControllerTest {
         String testSurname = "Doe";
         BigDecimal initialBalancePLN = BigDecimal.ZERO;
         BigDecimal initialBalanceUSD = BigDecimal.ZERO;
-        when(bankAccountService.getBalance(testUUID)).thenReturn(new GetBalanceResponse(testName, testSurname, initialBalancePLN, initialBalanceUSD));
+        when(bankAccountService.getBalance(testUUID)).thenReturn(new BalanceDetails(testName, testSurname, initialBalancePLN, initialBalanceUSD));
 
         //then
-        mockMvc.perform(post(Endpoints.BANK_ACCOUNT_GET_BALANCE_ENDPOINT, testUUID).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+        mockMvc.perform(get(Endpoints.BANK_ACCOUNT_GET_BALANCE_ENDPOINT, testUUID).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
     }
 
     @Test
-    void shouldReturnStatusBadRequestWhenCheckBalanceInputIsBlank() {
+    void shouldReturnStatusBadRequestWhenCheckBalanceInputIsBlank() throws Exception {
         //given
         String testUUID = "   ";
 
 
         //then
-        mockMvc.perform(post(Endpoints.BANK_ACCOUNT_GET_BALANCE_ENDPOINT, testUUID).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
+        mockMvc.perform(get(Endpoints.BANK_ACCOUNT_GET_BALANCE_ENDPOINT, testUUID).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
     }
 
     @Test
-    void shouldReturnStatusOkWhenExchangeCurrencyRequestIsValid() {
+    void shouldReturnStatusOkWhenExchangeCurrencyRequestIsValid() throws Exception {
         //given
         String testUUID = UUID.randomUUID().toString();
         ExchangeType exchangeType = ExchangeType.PLN_TO_USD;
         BigDecimal amountToExchange = BigDecimal.valueOf(123.23).setScale(2, RoundingMode.CEILING);
-        ExchangeCurrencyRequest exchangeCurrencyRequest = new ExcchangeCurrencyRequest(testUUID, exchangeType, amountToExchange);
+        ExchangeCurrencyRequest exchangeCurrencyRequest = new ExchangeCurrencyRequest(exchangeType, amountToExchange);
 
         //when
-        String testName = "John";
-        String testSurname = "Doe";
-        when(bankAccountService.exchangeCurrency(testUUID, exchangeType, amountToExchange)).thenReturn(new ExchangeCurrencyResponse(testUUID, BigDecimal.ZERO, amountToExchange));
+        when(bankAccountService.exchangeCurrency(testUUID, exchangeCurrencyRequest)).thenReturn(new ExchangeDetails(BigDecimal.ZERO, amountToExchange));
 
         //then
         mockMvc.perform(post(Endpoints.BANK_ACCOUNT_EXCHANGE_CURRENCY_ENDPOINT, testUUID).content(objectMapper.writeValueAsString(exchangeCurrencyRequest)).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
     }
 
     @Test
-    void shouldReturnStatusBadRequestWhenAmountToExchangeIsNegative(){
+    void shouldReturnStatusBadRequestWhenAmountToExchangeIsNegative() throws Exception {
         //given
         String testUUID = UUID.randomUUID().toString();
         ExchangeType exchangeType = ExchangeType.PLN_TO_USD;
         BigDecimal amountToExchange = BigDecimal.valueOf(-123.23).setScale(2, RoundingMode.CEILING);
-        ExchangeCurrencyRequest exchangeCurrencyRequest = new ExcchangeCurrencyRequest(testUUID, exchangeType, amountToExchange);
+        ExchangeCurrencyRequest exchangeCurrencyRequest = new ExchangeCurrencyRequest(exchangeType, amountToExchange);
 
         //then
         mockMvc.perform(post(Endpoints.BANK_ACCOUNT_EXCHANGE_CURRENCY_ENDPOINT, testUUID).content(objectMapper.writeValueAsString(exchangeCurrencyRequest)).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
     }
 
     @Test
-    void shouldReturnStatusBadRequestWhenIdIsBlank(){
+    void shouldReturnStatusBadRequestWhenIdIsBlank() throws Exception {
         //given
-        String testUUID = "";
+        String testUUID = "  ";
         ExchangeType exchangeType = ExchangeType.PLN_TO_USD;
         BigDecimal amountToExchange = BigDecimal.valueOf(123.23).setScale(2, RoundingMode.CEILING);
-        ExchangeCurrencyRequest exchangeCurrencyRequest = new ExcchangeCurrencyRequest(testUUID, exchangeType, amountToExchange);
+        ExchangeCurrencyRequest exchangeCurrencyRequest = new ExchangeCurrencyRequest(exchangeType, amountToExchange);
 
         //then
         mockMvc.perform(post(Endpoints.BANK_ACCOUNT_EXCHANGE_CURRENCY_ENDPOINT, testUUID).content(objectMapper.writeValueAsString(exchangeCurrencyRequest)).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());

@@ -5,4 +5,6 @@ public class Endpoints {
     public static final String BANK_ACCOUNT_CREATE_ACCOUNT_ENDPOINT = BANK_ACCOUNT_BASE_URL + "/create";
     public static final String BANK_ACCOUNT_GET_BALANCE_ENDPOINT = BANK_ACCOUNT_BASE_URL + "/{id}/balance";
     public static final String BANK_ACCOUNT_EXCHANGE_CURRENCY_ENDPOINT = BANK_ACCOUNT_BASE_URL + "/{id}/currency/exchange";
+
+    public static final String EXTERNAL_USD_CURRENCY_RATE_ENDPOINT = "https://api.nbp.pl/api/exchangerates/rates/c/usd";
 }
